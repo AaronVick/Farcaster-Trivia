@@ -56,19 +56,18 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
-      return res.status(200).json({
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:image" content="${ogImageUrl}" />
-              <meta property="fc:button" content="Start Trivia" />
-            </head>
-            <body></body>
-          </html>
-        `
-      });
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta property="fc:frame" content="vNext" />
+            <meta property="fc:frame:image" content="${ogImageUrl}" />
+            <meta property="fc:frame:button:1" content="Start Trivia" />
+          </head>
+          <body></body>
+        </html>
+      `);
     } else if (req.method === 'POST') {
       const { untrustedData } = req.body;
       const buttonIndex = untrustedData?.buttonIndex;
@@ -79,22 +78,21 @@ export default async function handler(req, res) {
         const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
         const ogImageUrl = generateOgImageUrl(decodedQuestion);
 
-        return res.status(200).json({
-          html: `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta property="fc:frame" content="vNext" />
-                <meta property="fc:image" content="${ogImageUrl}" />
-                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-              </head>
-              <body></body>
-            </html>
-          `
-        });
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${ogImageUrl}" />
+              <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
+              <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
+              <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
+              <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+            </head>
+            <body></body>
+          </html>
+        `);
       } else if (currentQuestion && buttonIndex > 1 && buttonIndex <= 4) {
         const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
         const isCorrect = userAnswer === currentQuestion.correct_answer;
@@ -105,28 +103,32 @@ export default async function handler(req, res) {
 
         const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
-        return res.status(200).json({
-          html: `
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <meta property="fc:frame" content="vNext" />
-                <meta property="fc:image" content="${ogImageUrl}" />
-                <meta property="fc:button" content="Next Question" />
-                <meta property="fc:button" content="Share" />
-              </head>
-              <body></body>
-            </html>
-          `
-        });
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${ogImageUrl}" />
+              <meta property="fc:frame:button:1" content="Next Question" />
+              <meta property="fc:frame:button:2" content="Share" />
+              <meta property="fc:frame:button:2:action" content="link" />
+              <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
+            </head>
+            <body></body>
+          </html>
+        `);
       } else {
-        return res.status(400).json({ error: 'Invalid request' });
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(400).send('Invalid request');
       }
     } else {
-      return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+      res.setHeader('Content-Type', 'text/html');
+      return res.status(405).send(`Method ${req.method} Not Allowed`);
     }
   } catch (error) {
     console.error('Error in handler:', error);
-    return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+    res.setHeader('Content-Type', 'text/html');
+    return res.status(500).send('Internal Server Error: ' + error.message);
   }
 }
