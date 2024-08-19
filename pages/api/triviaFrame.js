@@ -108,7 +108,10 @@ export default async function handler(req, res) {
         const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
         const isCorrect = userAnswer === currentQuestion.correct_answer;
 
-        const resultText = isCorrect ? "Correct! Well done!" : `Sorry, that's incorrect. The correct answer was: ${decodeHtmlEntities(currentQuestion.correct_answer)}`;
+        const resultText = isCorrect 
+          ? "Correct! Well done!" 
+          : `Sorry, that's incorrect. The correct answer was: ${decodeHtmlEntities(currentQuestion.correct_answer)}`;
+
         const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
         return res.status(200).json({
