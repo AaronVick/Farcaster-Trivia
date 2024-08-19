@@ -53,6 +53,8 @@ function optimizeAnswerText(text) {
 }
 
 export default async function handler(req, res) {
+  console.log('Received request:', req.method, req.url);
+
   try {
     if (req.method === 'GET') {
       const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
@@ -65,12 +67,19 @@ export default async function handler(req, res) {
             <meta property="fc:frame:image" content="${ogImageUrl}" />
             <meta property="fc:frame:button:1" content="Start Trivia" />
           </head>
-          <body></body>
         </html>
       `);
     } else if (req.method === 'POST') {
+      console.log('Received POST body:', req.body);
+      
       const { untrustedData } = req.body;
-      const buttonIndex = untrustedData?.buttonIndex;
+      if (!untrustedData) {
+        console.error('No untrustedData in request body');
+        return res.status(400).send('Invalid request: missing untrustedData');
+      }
+      
+      const buttonIndex = untrustedData.buttonIndex;
+      console.log('Button index:', buttonIndex);
 
       if (!currentQuestion || buttonIndex === 1) {
         currentQuestion = await getValidQuestion();
@@ -90,11 +99,10 @@ export default async function handler(req, res) {
               <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
               <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
             </head>
-            <body></body>
           </html>
         `);
-      } else if (currentQuestion && buttonIndex > 1 && buttonIndex <= 4) {
-        const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
+      } else if (currentQuestion && buttonIndex >= 1 && buttonIndex <= 4) {
+        const userAnswer = buttonIndex === 1 ? currentQuestion.correct_answer : currentQuestion.incorrect_answers[buttonIndex - 2];
         const isCorrect = userAnswer === currentQuestion.correct_answer;
 
         const resultText = isCorrect 
@@ -115,14 +123,15 @@ export default async function handler(req, res) {
               <meta property="fc:frame:button:2:action" content="link" />
               <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
             </head>
-            <body></body>
           </html>
         `);
       } else {
+        console.error('Invalid button index:', buttonIndex);
         res.setHeader('Content-Type', 'text/html');
-        return res.status(400).send('Invalid request');
+        return res.status(400).send('Invalid request: unexpected button index');
       }
     } else {
+      console.log('Unsupported method:', req.method);
       res.setHeader('Content-Type', 'text/html');
       return res.status(405).send(`Method ${req.method} Not Allowed`);
     }
