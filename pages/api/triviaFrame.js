@@ -58,7 +58,23 @@ export default async function handler(req, res) {
   console.log('Request body:', req.body);
 
   try {
-    if (req.method === 'POST') {
+    if (req.method === 'GET') {
+      // Handle GET request (initial load)
+      console.log('Handling GET request');
+      const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
+      return res.status(200).json({
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${ogImageUrl}" />
+              <meta property="fc:frame:button:1" content="Start Trivia" />
+            </head>
+          </html>
+        `
+      });
+    } else if (req.method === 'POST') {
       console.log('Handling POST request');
       const { untrustedData } = req.body;
       const buttonIndex = untrustedData?.buttonIndex;
@@ -77,13 +93,11 @@ export default async function handler(req, res) {
               <head>
                 <meta property="fc:frame" content="vNext" />
                 <meta property="fc:frame:image" content="${ogImageUrl}" />
-                <meta property="fc:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-                <meta property="fc:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-                <meta property="fc:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-                <meta property="fc:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+                <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
+                <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
+                <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
+                <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
               </head>
-              <body>
-              </body>
             </html>
           `
         });
@@ -104,13 +118,11 @@ export default async function handler(req, res) {
               <head>
                 <meta property="fc:frame" content="vNext" />
                 <meta property="fc:frame:image" content="${ogImageUrl}" />
-                <meta property="fc:button:1" content="Next Question" />
-                <meta property="fc:button:2" content="Share" />
-                <meta property="fc:button:2:action" content="link" />
-                <meta property="fc:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
+                <meta property="fc:frame:button:1" content="Next Question" />
+                <meta property="fc:frame:button:2" content="Share" />
+                <meta property="fc:frame:button:2:action" content="link" />
+                <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
               </head>
-              <body>
-              </body>
             </html>
           `
         });
