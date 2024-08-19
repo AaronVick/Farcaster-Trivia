@@ -53,13 +53,8 @@ function optimizeAnswerText(text) {
 }
 
 export default async function handler(req, res) {
-  console.log('Received request:', req.method, req.url);
-  console.log('Request headers:', req.headers);
-  console.log('Request body:', req.body);
-
   try {
     if (req.method === 'GET') {
-      console.log('Handling GET request');
       const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
       return res.status(200).json({
         html: `
@@ -67,19 +62,16 @@ export default async function handler(req, res) {
           <html>
             <head>
               <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${ogImageUrl}" />
-              <meta property="fc:button:1" content="Start Trivia" />
+              <meta property="fc:image" content="${ogImageUrl}" />
+              <meta property="fc:button" content="Start Trivia" />
             </head>
-            <body>
-            </body>
+            <body></body>
           </html>
         `
       });
     } else if (req.method === 'POST') {
-      console.log('Handling POST request');
       const { untrustedData } = req.body;
       const buttonIndex = untrustedData?.buttonIndex;
-      console.log('Button index:', buttonIndex);
 
       if (!currentQuestion || buttonIndex === 1) {
         currentQuestion = await getValidQuestion();
@@ -93,14 +85,13 @@ export default async function handler(req, res) {
             <html>
               <head>
                 <meta property="fc:frame" content="vNext" />
-                <meta property="fc:frame:image" content="${ogImageUrl}" />
-                <meta property="fc:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-                <meta property="fc:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-                <meta property="fc:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-                <meta property="fc:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+                <meta property="fc:image" content="${ogImageUrl}" />
+                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
+                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
+                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
+                <meta property="fc:button" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
               </head>
-              <body>
-              </body>
+              <body></body>
             </html>
           `
         });
@@ -120,23 +111,18 @@ export default async function handler(req, res) {
             <html>
               <head>
                 <meta property="fc:frame" content="vNext" />
-                <meta property="fc:frame:image" content="${ogImageUrl}" />
-                <meta property="fc:button:1" content="Next Question" />
-                <meta property="fc:button:2" content="Share" />
-                <meta property="fc:button:2:action" content="link" />
-                <meta property="fc:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
+                <meta property="fc:image" content="${ogImageUrl}" />
+                <meta property="fc:button" content="Next Question" />
+                <meta property="fc:button" content="Share" />
               </head>
-              <body>
-              </body>
+              <body></body>
             </html>
           `
         });
       } else {
-        console.log('Invalid button index or missing current question');
         return res.status(400).json({ error: 'Invalid request' });
       }
     } else {
-      console.log('Method not allowed:', req.method);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
     }
   } catch (error) {
