@@ -4,24 +4,25 @@
     "description": "A Farcaster Frame for a trivia challenge",
     "main": "index.js",
     "scripts": {
-      "dev": "next dev",
-      "build": "next build",
-      "start": "next start",
-      "lint": "next lint"
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "next lint"
     },
     "dependencies": {
-      "next": "^13.0.0",
-      "react": "^18.2.0",
-      "react-dom": "^18.2.0",
-      "axios": "^0.27.2",
-      "@vercel/og": "^0.5.0"
+        "@vercel/og": "^0.5.0",
+        "axios": "^0.27.2",
+        "he": "^1.2.0",
+        "next": "^13.0.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
     },
     "devDependencies": {
-      "@types/react": "^18.0.0",
-      "@types/node": "^18.0.0",
-      "typescript": "^4.7.4"
+        "@types/node": "^18.0.0",
+        "@types/react": "^18.0.0",
+        "typescript": "^4.7.4"
     },
     "engines": {
-      "node": ">=14.0.0"
+        "node": ">=14.0.0"
     }
-  }
+}
