@@ -1,19 +1,34 @@
 import axios from 'axios';
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
+let questionCache = [];
 let currentQuestion = null;
 
-async function fetchTriviaQuestion() {
-  while (true) {
-    const response = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple');
-    const question = response.data.results[0];
+async function fetchTriviaQuestions() {
+  if (questionCache.length > 0) {
+    return questionCache.pop();
+  }
+  
+  try {
+    const response = await axios.get('https://opentdb.com/api.php?amount=5&type=multiple');
+    questionCache = response.data.results;
+    return questionCache.pop();
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    throw new Error('Failed to fetch trivia questions');
+  }
+}
+
+async function getValidQuestion() {
+  for (let i = 0; i < 3; i++) {  // Try up to 3 times
+    const question = await fetchTriviaQuestions();
     const allAnswers = [question.correct_answer, ...question.incorrect_answers];
-    if (allAnswers.every(answer => optimizeAnswerText(decodeHtmlEntities(answer)).length <= 11)) {
-      console.log('Found suitable question:', question);
+    if (allAnswers.every(answer => optimizeAnswerText(decodeHtmlEntities(answer)).length <= 15)) {
       return question;
     }
-    console.log('Skipping question due to long answers:', question);
+    await new Promise(resolve => setTimeout(resolve, 1000));  // Wait 1 second before trying again
   }
+  throw new Error('Could not find a suitable question');
 }
 
 function generateOgImageUrl(text, isQuestion = true, isCorrect = null) {
@@ -34,19 +49,11 @@ function decodeHtmlEntities(text) {
 }
 
 function optimizeAnswerText(text) {
-  const trimmed = text.trim();
-  const lowercased = trimmed.toLowerCase();
-  const words = lowercased.split(' ');
-  const stopWords = ['the', 'a', 'an'];
-  if (stopWords.includes(words[0])) {
-    return words.slice(1).join(' ');
-  }
-  return trimmed;
+  return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
 export default async function handler(req, res) {
   console.log('Received request:', req.method, req.url);
-  console.log('Request body:', req.body);
 
   try {
     if (req.method === 'POST') {
@@ -57,7 +64,7 @@ export default async function handler(req, res) {
 
       if (!currentQuestion || buttonIndex === 1) { // New question or "Next Question" pressed
         console.log('Fetching new question');
-        currentQuestion = await fetchTriviaQuestion();
+        currentQuestion = await getValidQuestion();
         const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
         const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
         const ogImageUrl = generateOgImageUrl(decodedQuestion);
@@ -101,7 +108,6 @@ export default async function handler(req, res) {
       }
     } else if (req.method === 'GET') {
       console.log('Handling GET request');
-      // Handle initial GET request
       const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
       console.log('Sending welcome frame');
       return res.status(200).send(`
@@ -120,6 +126,6 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('Error in handler:', error);
-    return res.status(500).send('Internal Server Error');
+    return res.status(500).send('Internal Server Error: ' + error.message);
   }
 }
