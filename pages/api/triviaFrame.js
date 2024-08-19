@@ -4,8 +4,14 @@ const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
 let currentQuestion = null;
 
 async function fetchTriviaQuestion() {
-  const response = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple');
-  return response.data.results[0];
+  while (true) {
+    const response = await axios.get('https://opentdb.com/api.php?amount=1&type=multiple');
+    const question = response.data.results[0];
+    const allAnswers = [question.correct_answer, ...question.incorrect_answers];
+    if (allAnswers.every(answer => optimizeAnswerText(decodeHtmlEntities(answer)).length <= 24)) {
+      return question;
+    }
+  }
 }
 
 function generateOgImageUrl(text, isQuestion = true, isCorrect = null) {
@@ -44,7 +50,7 @@ export default async function handler(req, res) {
       buttonIndex = untrustedData.buttonIndex;
     }
 
-    if (!currentQuestion || buttonIndex === 5) { // New question or "Next Question" pressed
+    if (!currentQuestion || buttonIndex === 1) { // New question or "Next Question" pressed
       currentQuestion = await fetchTriviaQuestion();
       const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
       const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
@@ -60,13 +66,12 @@ export default async function handler(req, res) {
             <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
             <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
             <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-            <meta property="fc:frame:button:5" content="Next Question" />
           </head>
         </html>
       `;
       
       res.status(200).send(html);
-    } else if (currentQuestion && buttonIndex > 0 && buttonIndex < 5) { // Answer selected
+    } else if (currentQuestion && buttonIndex > 0 && buttonIndex <= 4) { // Answer selected
       const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
       const isCorrect = userAnswer === currentQuestion.correct_answer;
       
