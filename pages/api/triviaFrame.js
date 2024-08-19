@@ -43,12 +43,9 @@ function optimizeAnswerText(text) {
 }
 
 export default async function handler(req, res) {
-  if (req.method === 'POST' || req.method === 'GET') {
-    let buttonIndex = 0;
-    if (req.method === 'POST') {
-      const { untrustedData } = req.body;
-      buttonIndex = untrustedData.buttonIndex;
-    }
+  if (req.method === 'POST') {
+    const { untrustedData } = req.body;
+    const buttonIndex = untrustedData.buttonIndex;
 
     if (!currentQuestion || buttonIndex === 1) { // New question or "Next Question" pressed
       currentQuestion = await fetchTriviaQuestion();
@@ -56,7 +53,7 @@ export default async function handler(req, res) {
       const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
       const ogImageUrl = generateOgImageUrl(decodedQuestion);
       
-      const html = `
+      return res.status(200).send(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -68,9 +65,7 @@ export default async function handler(req, res) {
             <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
           </head>
         </html>
-      `;
-      
-      res.status(200).send(html);
+      `);
     } else if (currentQuestion && buttonIndex > 0 && buttonIndex <= 4) { // Answer selected
       const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
       const isCorrect = userAnswer === currentQuestion.correct_answer;
@@ -78,7 +73,7 @@ export default async function handler(req, res) {
       const resultText = isCorrect ? "Correct! Well done!" : `Sorry, that's incorrect. The correct answer was: ${decodeHtmlEntities(currentQuestion.correct_answer)}`;
       const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
       
-      const html = `
+      return res.status(200).send(`
         <!DOCTYPE html>
         <html>
           <head>
@@ -90,25 +85,22 @@ export default async function handler(req, res) {
             <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=I just played Farcaster Trivia! Can you beat my score?%0A%0APlay now: https://farcaster-trivia-one.vercel.app/" />
           </head>
         </html>
-      `;
-      
-      res.status(200).send(html);
-    } else {
-      // Handle initial GET request or invalid button index
-      const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
-      const html = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta property="fc:frame" content="vNext" />
-            <meta property="fc:frame:image" content="${ogImageUrl}" />
-            <meta property="fc:frame:button:1" content="Start Trivia" />
-          </head>
-        </html>
-      `;
-      res.status(200).send(html);
+      `);
     }
+  } else if (req.method === 'GET') {
+    // Handle initial GET request
+    const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
+    return res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta property="fc:frame" content="vNext" />
+          <meta property="fc:frame:image" content="${ogImageUrl}" />
+          <meta property="fc:frame:button:1" content="Start Trivia" />
+        </head>
+      </html>
+    `);
   } else {
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
