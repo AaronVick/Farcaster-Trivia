@@ -59,7 +59,6 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
-      // Handle GET request (initial load)
       console.log('Handling GET request');
       const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
       return res.status(200).json({
@@ -101,7 +100,7 @@ export default async function handler(req, res) {
             </html>
           `
         });
-      } else if (currentQuestion && buttonIndex > 0 && buttonIndex <= 4) {
+      } else if (currentQuestion && buttonIndex > 1 && buttonIndex <= 4) {
         const userAnswer = currentQuestion.incorrect_answers[buttonIndex - 2] || currentQuestion.correct_answer;
         const isCorrect = userAnswer === currentQuestion.correct_answer;
 
