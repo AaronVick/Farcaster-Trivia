@@ -18,6 +18,9 @@ export default function handler(req) {
       backgroundColor = result === 'correct' ? '#4caf50' : '#f44336';
     }
 
+    // Split the text into lines to control line breaks
+    const lines = text.split('\n');
+
     return new ImageResponse(
       (
         <div
@@ -26,17 +29,30 @@ export default function handler(req) {
             width: '100%',
             height: '100%',
             display: 'flex',
-            alignItems: 'center',
+            flexDirection: 'column',
             justifyContent: 'center',
-            fontFamily: 'Arial',
-            fontSize: 60,
+            fontFamily: 'Arial, sans-serif',
             fontWeight: 'bold',
-            textAlign: 'center',
-            padding: '40px',
             color: textColor,
+            padding: '40px',
+            textAlign: 'center',
           }}
         >
-          {text}
+          <div style={{ fontSize: 60, marginBottom: 20 }}>
+            {lines[0]}
+          </div>
+          {lines[1] && (
+            <div style={{ fontSize: 40, marginBottom: 20 }}>
+              {lines[1]}
+            </div>
+          )}
+          <div style={{ fontSize: 50 }}>
+            {lines.slice(2).map((line, index) => (
+              <div key={index} style={{ fontSize: 30 }}>
+                {line}
+              </div>
+            ))}
+          </div>
         </div>
       ),
       {
