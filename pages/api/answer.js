@@ -33,9 +33,11 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
       gameTally.incorrect += 1;
     }
 
+    // Adding line breaks for proper formatting
     const resultText = isCorrect ? "Correct!" : `Incorrect!\n\nThe correct answer was: ${correctAnswer}`;
     const tallyText = `Correct: ${gameTally.correct}\nIncorrect: ${gameTally.incorrect}`;
     const fullText = `${resultText}\n\n${tallyText}`;
+    
     const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(fullText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
 
     const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
