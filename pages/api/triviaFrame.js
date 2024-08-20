@@ -56,20 +56,7 @@ export default async function handler(req, res) {
   console.log('Received request:', req.method, req.url);
 
   try {
-    if (req.method === 'GET') {
-      const ogImageUrl = generateOgImageUrl("Welcome to Farcaster Trivia!");
-      res.setHeader('Content-Type', 'text/html');
-      return res.status(200).send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta property="fc:frame" content="vNext" />
-            <meta property="fc:frame:image" content="${ogImageUrl}" />
-            <meta property="fc:frame:button:1" content="Start Trivia" />
-          </head>
-        </html>
-      `);
-    } else if (req.method === 'POST') {
+    if (req.method === 'POST') {
       console.log('Received POST body:', JSON.stringify(req.body));
       
       const { untrustedData } = req.body;
@@ -81,28 +68,51 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      // Always get a new question on POST, regardless of the current state
-      currentQuestion = await getValidQuestion();
-      const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
-      const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
-      const ogImageUrl = generateOgImageUrl(decodedQuestion);
+      if (currentQuestion) {
+        const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex]));
+        const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
+        const isCorrect = selectedAnswer === correctAnswer;
+        const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
+        const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
-      res.setHeader('Content-Type', 'text/html');
-      return res.status(200).send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta property="fc:frame" content="vNext" />
-            <meta property="fc:frame:image" content="${ogImageUrl}" />
-            <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-            <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-            <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-            <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-          </head>
-        </html>
-      `);
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${ogImageUrl}" />
+              <meta property="fc:frame:button:1" content="Next Question" />
+              <meta property="fc:frame:button:2" content="Share Game" />
+            </head>
+          </html>
+        `);
+      } else {
+        // No current question, so we need to load a new one
+        currentQuestion = await getValidQuestion();
+        const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
+        const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
+        const ogImageUrl = generateOgImageUrl(decodedQuestion);
+
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(`
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta property="fc:frame" content="vNext" />
+              <meta property="fc:frame:image" content="${ogImageUrl}" />
+              <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
+              <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
+              <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
+              <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+            </head>
+          </html>
+        `);
+      }
     } else {
+      // Updated to handle any other method types gracefully
       console.log('Unsupported method:', req.method);
+      res.setHeader('Allow', 'POST');  // Explicitly inform that only POST is allowed
       res.setHeader('Content-Type', 'application/json');
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
     }
