@@ -48,9 +48,17 @@ async function handleNextQuestion(res) {
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
   const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(decodedQuestion)}`;
 
-  // Set the environment variable with the current question data
-  process.env.answer_Value = JSON.stringify(currentQuestion);
-  console.log("Setting currentQuestion in answer_Value:", process.env.answer_Value); // Debugging: Log currentQuestion
+  // Create a mapping of buttons to answers
+  const buttonMapping = {
+    1: optimizeAnswerText(decodeHtmlEntities(answers[0])),
+    2: optimizeAnswerText(decodeHtmlEntities(answers[1])),
+    3: optimizeAnswerText(decodeHtmlEntities(answers[2])),
+    4: optimizeAnswerText(decodeHtmlEntities(answers[3])),
+  };
+
+  // Store the currentQuestion and buttonMapping in the environment variable
+  process.env.answer_Value = JSON.stringify({ currentQuestion, buttonMapping });
+  console.log("Setting currentQuestion and buttonMapping in answer_Value:", process.env.answer_Value);
 
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`

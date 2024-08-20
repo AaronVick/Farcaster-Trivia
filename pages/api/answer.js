@@ -14,22 +14,16 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
-async function handleAnswerSelection(buttonIndex, res, currentQuestion) {
+async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping) {
   try {
-    console.log("Received currentQuestion from answer_Value:", currentQuestion); // Debugging: Log currentQuestion
+    console.log("Received currentQuestion and buttonMapping from answer_Value:", { currentQuestion, buttonMapping });
 
-    if (!currentQuestion) {
-      console.error("Current question is not set.");
-      return res.status(500).json({ error: "Current question is not available." });
+    if (!currentQuestion || !buttonMapping) {
+      console.error("Current question or button mapping is not set.");
+      return res.status(500).json({ error: "Current question or button mapping is not available." });
     }
 
-    let selectedAnswer;
-    if (buttonIndex === 1) {
-      selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
-    } else {
-      selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 2]));
-    }
-
+    const selectedAnswer = buttonMapping[buttonIndex];
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
     const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
@@ -73,11 +67,11 @@ export default async function handler(req, res) {
       }
 
       const buttonIndex = untrustedData.buttonIndex;
-      const currentQuestion = JSON.parse(process.env.answer_Value || null);  // Retrieve the current question from the environment variable
+      const { currentQuestion, buttonMapping } = JSON.parse(process.env.answer_Value || '{}');  // Retrieve the current question and button mapping from the environment variable
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
-      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion);
+      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping);
 
       if (buttonIndex === 1) {
         process.env.answer_Value = null; // Reset the environment variable if "Next Question" is clicked
