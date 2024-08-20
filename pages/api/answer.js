@@ -43,11 +43,11 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     const shareText = encodeURIComponent(
       "Take a break and play some trivia!\n\n" +
       "I got " + process.env.GameWins + " out of " + process.env.gameTally + " correct.\n\n" +
-      "Frame by @aaronv\n\n" +
-      "&embeds[]=https%3A%2F%2Ffarcaster-trivia-one.vercel.app%2F"
+      "Frame by @aaronv\n\n"
     );
-    const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
-
+    
+    const shareLink = `https://warpcast.com/~/compose?text=${shareText}&embeds[]=https%3A%2F%2Ffarcaster-trivia-one.vercel.app%2F`;
+    
     res.setHeader('Content-Type', 'text/html');
     return res.status(200).send(`
       <!DOCTYPE html>
