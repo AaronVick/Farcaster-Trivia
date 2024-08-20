@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getAnswerValue, setAnswerValue } from 'vercel-env-variable-helper'; // Helper functions to get and set the environment variable
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
 
@@ -16,7 +17,7 @@ function optimizeAnswerText(text) {
 
 async function handleAnswerSelection(buttonIndex, res, currentQuestion) {
   try {
-    console.log("Received currentQuestion:", JSON.stringify(currentQuestion)); // Debugging: Log currentQuestion
+    console.log("Received currentQuestion from answer_Value:", currentQuestion); // Debugging: Log currentQuestion
 
     if (!currentQuestion) {
       console.error("Current question is not set.");
@@ -67,11 +68,17 @@ export default async function handler(req, res) {
       }
 
       const buttonIndex = untrustedData.buttonIndex;
-      const currentQuestion = untrustedData.currentQuestion ? JSON.parse(untrustedData.currentQuestion) : null;  // Retrieve the current question
+      const currentQuestion = getAnswerValue();  // Retrieve the current question from the environment variable
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
-      return handleAnswerSelection(buttonIndex, res, currentQuestion);
+      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion);
+
+      if (buttonIndex === 1) {
+        setAnswerValue(null); // Reset the environment variable if "Next Question" is clicked
+      }
+
+      return response;
     } else {
       console.log('Method not allowed:', req.method);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
