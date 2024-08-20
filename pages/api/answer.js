@@ -14,7 +14,7 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
-async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping) {
+async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping, gameTally) {
   try {
     console.log("Received currentQuestion and buttonMapping from answer_Value:", { currentQuestion, buttonMapping });
 
@@ -26,7 +26,15 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     const selectedAnswer = buttonMapping[buttonIndex];
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
-    const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
+
+    if (isCorrect) {
+      gameTally.correct += 1;
+    } else {
+      gameTally.incorrect += 1;
+    }
+
+    const resultText = isCorrect ? "Correct!" : `Incorrect!\n\nThe correct answer was: ${correctAnswer}`;
+    const tallyText = `\n\nCorrect: ${gameTally.correct}\nIncorrect: ${gameTally.incorrect}`;
     const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(resultText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
 
     const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
@@ -45,6 +53,9 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
           <meta property="fc:frame:button:2:action" content="link" />
           <meta property="fc:frame:button:2:target" content="${shareLink}" />
         </head>
+        <body>
+          <div style="font-size: smaller;">${tallyText}</div>
+        </body>
       </html>
     `);
   } catch (error) {
@@ -68,14 +79,21 @@ export default async function handler(req, res) {
 
       const buttonIndex = untrustedData.buttonIndex;
       const { currentQuestion, buttonMapping } = JSON.parse(process.env.answer_Value || '{}');  // Retrieve the current question and button mapping from the environment variable
+
+      // Retrieve or initialize the game tally
+      let gameTally = JSON.parse(process.env.gameTally || '{"correct": 0, "incorrect": 0}');
+
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
-      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping);
+      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping, gameTally);
 
       if (buttonIndex === 1) {
         process.env.answer_Value = null; // Reset the environment variable if "Next Question" is clicked
       }
+
+      // Update the game tally in the environment variable
+      process.env.gameTally = JSON.stringify(gameTally);
 
       return response;
     } else {
