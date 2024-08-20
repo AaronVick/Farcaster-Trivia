@@ -48,6 +48,8 @@ async function handleNextQuestion(res) {
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
   const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(decodedQuestion)}`;
 
+  console.log("Setting currentQuestion:", JSON.stringify(currentQuestion)); // Debugging: Log currentQuestion
+
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
     <!DOCTYPE html>

@@ -16,6 +16,8 @@ function optimizeAnswerText(text) {
 
 async function handleAnswerSelection(buttonIndex, res, currentQuestion) {
   try {
+    console.log("Received currentQuestion:", JSON.stringify(currentQuestion)); // Debugging: Log currentQuestion
+
     if (!currentQuestion) {
       console.error("Current question is not set.");
       return res.status(500).json({ error: "Current question is not available." });
