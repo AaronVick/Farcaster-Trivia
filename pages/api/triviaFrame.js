@@ -52,43 +52,48 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
-export default async function handler(req, res) {
-  console.log('Received request:', req.method, req.url);
+async function handleAnswerSelection(buttonIndex, res) {
+  const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex]));
+  const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
+  const isCorrect = selectedAnswer === correctAnswer;
+  const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
+  const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
-  try {
-    if (req.method === 'POST') {
-      console.log('Received POST body:', JSON.stringify(req.body));
-      
+  res.setHeader('Content-Type', 'text/html');
+  return res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta property="fc:frame" content="vNext" />
+        <meta property="fc:frame:image" content="${ogImageUrl}" />
+        <meta property="fc:frame:button:1" content="Next Question" />
+        <meta property="fc:frame:button:2" content="Share Game" />
+      </head>
+    </html>
+  `);
+}
+
+export default async function handler(req, res) {
+  console.log('Received request to triviaFrame handler');
+  console.log('Request method:', req.method);
+
+  if (req.method === 'POST') { // Ensure the method is POST
+    try {
+      console.log('Processing POST request...');
       const { untrustedData } = req.body;
+
       if (!untrustedData) {
         console.error('No untrustedData in request body');
         return res.status(400).json({ error: 'Invalid request: missing untrustedData' });
       }
-      
+
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
       if (currentQuestion) {
-        const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex]));
-        const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
-        const isCorrect = selectedAnswer === correctAnswer;
-        const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
-        const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
-
-        res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${ogImageUrl}" />
-              <meta property="fc:frame:button:1" content="Next Question" />
-              <meta property="fc:frame:button:2" content="Share Game" />
-            </head>
-          </html>
-        `);
+        return handleAnswerSelection(buttonIndex, res);
       } else {
-        // No current question, so we need to load a new one
+        // Load a new question if none exists
         currentQuestion = await getValidQuestion();
         const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
         const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
@@ -109,16 +114,13 @@ export default async function handler(req, res) {
           </html>
         `);
       }
-    } else {
-      // Updated to handle any other method types gracefully
-      console.log('Unsupported method:', req.method);
-      res.setHeader('Allow', 'POST');  // Explicitly inform that only POST is allowed
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+    } catch (error) {
+      console.error('Error processing POST request:', error);
+      return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
     }
-  } catch (error) {
-    console.error('Error in handler:', error);
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+  } else {
+    // If any other method is used, respond with a 405 error
+    console.log('Method not allowed:', req.method);
+    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
