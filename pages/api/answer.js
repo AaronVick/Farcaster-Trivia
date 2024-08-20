@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
-let currentQuestion = null; // Ensure currentQuestion is correctly set from triviaFrame.js or retained state
 
 function decodeHtmlEntities(text) {
   return text.replace(/&amp;/g, '&')
@@ -17,11 +16,6 @@ function optimizeAnswerText(text) {
 
 async function handleAnswerSelection(buttonIndex, res) {
   try {
-    if (!currentQuestion) {
-      console.error("Current question is not set.");
-      return res.status(400).json({ error: "Current question is not available." });
-    }
-
     const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 1]));
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
