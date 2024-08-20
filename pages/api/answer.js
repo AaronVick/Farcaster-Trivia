@@ -28,11 +28,8 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     const isCorrect = selectedAnswer === correctAnswer;
 
     // Track correct and incorrect answers
-    if (isCorrect) {
-      process.env.GameWins = parseInt(process.env.GameWins || '0') + 1;
-    } else {
-      process.env.GameLoss = parseInt(process.env.GameLoss || '0') + 1;
-    }
+    process.env.GameWins = parseInt(process.env.GameWins || '0') + (isCorrect ? 1 : 0);
+    process.env.GameLoss = parseInt(process.env.GameLoss || '0') + (!isCorrect ? 1 : 0);
 
     // Track total questions answered
     process.env.gameTally = parseInt(process.env.gameTally || '0') + 1;
@@ -83,20 +80,14 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       const { currentQuestion, buttonMapping } = JSON.parse(process.env.answer_Value || '{}');  // Retrieve the current question and button mapping from the environment variable
 
-      // Retrieve or initialize the game tally
-      let gameTally = JSON.parse(process.env.gameTally || '{"correct": 0, "incorrect": 0}');
-
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
-      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping, gameTally);
+      const response = await handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping);
 
       if (buttonIndex === 1) {
         process.env.answer_Value = null; // Reset the environment variable if "Next Question" is clicked
       }
-
-      // Update the game tally in the environment variable
-      process.env.gameTally = JSON.stringify(gameTally);
 
       return response;
     } else {
