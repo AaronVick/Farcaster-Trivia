@@ -14,7 +14,7 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
-async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping, gameTally) {
+async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMapping) {
   try {
     console.log("Received currentQuestion and buttonMapping from answer_Value:", { currentQuestion, buttonMapping });
 
@@ -27,15 +27,18 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
 
+    // Track correct and incorrect answers
     if (isCorrect) {
-      gameTally.correct += 1;
+      process.env.GameWins = parseInt(process.env.GameWins || '0') + 1;
     } else {
-      gameTally.incorrect += 1;
+      process.env.GameLoss = parseInt(process.env.GameLoss || '0') + 1;
     }
 
-    // Adding line breaks for proper formatting
+    // Track total questions answered
+    process.env.gameTally = parseInt(process.env.gameTally || '0') + 1;
+
     const resultText = isCorrect ? "Correct!" : `Incorrect!\n\nThe correct answer was: ${correctAnswer}`;
-    const tallyText = `Correct: ${gameTally.correct}\nIncorrect: ${gameTally.incorrect}`;
+    const tallyText = `Correct: ${process.env.GameWins}\nIncorrect: ${process.env.GameLoss}\nTotal Answered: ${process.env.gameTally}`;
     const fullText = `${resultText}\n\n${tallyText}`;
     
     const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(fullText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
