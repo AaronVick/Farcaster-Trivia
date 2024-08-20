@@ -80,7 +80,7 @@ async function handleAnswerSelection(buttonIndex, res) {
 }
 
 async function handleNextQuestion(res) {
-  currentQuestion = await getValidQuestion();
+  currentQuestion = await getValidQuestion();  // Fetch the next question
   const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
   const ogImageUrl = generateOgImageUrl(decodedQuestion);
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const untrustedData = req.body?.untrustedData;
-      
+
       if (!untrustedData) {
         console.error('No untrustedData in request body');
         return res.status(400).json({ error: 'Invalid request: missing untrustedData' });
@@ -118,31 +118,15 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      if (buttonIndex === 1 && currentQuestion === null) {
+      if (buttonIndex === 1 && currentQuestion) {
+        // Handle "Next Question" button click
         return handleNextQuestion(res);
       } else if (currentQuestion) {
+        // Handle answer selection (buttons 2, 3, 4)
         return handleAnswerSelection(buttonIndex, res);
       } else {
-        currentQuestion = await getValidQuestion();
-        const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
-        const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
-        const ogImageUrl = generateOgImageUrl(decodedQuestion);
-
-        res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${ogImageUrl}" />
-              <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-              <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-              <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-              <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-              <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
-            </head>
-          </html>
-        `);
+        // Initial question loading
+        return handleNextQuestion(res);
       }
     } else {
       console.log('Method not allowed:', req.method);
