@@ -59,6 +59,10 @@ async function handleAnswerSelection(buttonIndex, res) {
   const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
   const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
+  const shareText = encodeURIComponent("Just played Farcaster Trivia and it's awesome! Give it a try.");
+  const shareUrl = encodeURIComponent("https://farcaster-trivia-one.vercel.app/");
+  const shareLink = `https://warpcast.com/~/compose?text=${shareText}&embeds[]=${shareUrl}`;
+
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
     <!DOCTYPE html>
@@ -67,7 +71,10 @@ async function handleAnswerSelection(buttonIndex, res) {
         <meta property="fc:frame" content="vNext" />
         <meta property="fc:frame:image" content="${ogImageUrl}" />
         <meta property="fc:frame:button:1" content="Next Question" />
+        <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
         <meta property="fc:frame:button:2" content="Share Game" />
+        <meta property="fc:frame:button:2:action" content="link" />
+        <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=Take a break and play some trivia!%0A%0AFrame by @aaronv https://farcaster-trivia-one.vercel.app/" />
       </head>
     </html>
   `);
@@ -78,11 +85,15 @@ export default async function handler(req, res) {
   console.log('Request method:', req.method);
 
   try {
-    // Accept both POST and GET requests for button clicks
-    if (req.method === 'POST' || req.method === 'GET') { 
-      const untrustedData = req.body?.untrustedData || { buttonIndex: 0 }; // Handle the case where GET request doesn't include a body
+    if (req.method === 'POST') {
+      const untrustedData = req.body?.untrustedData;
+      
+      if (!untrustedData) {
+        console.error('No untrustedData in request body');
+        return res.status(400).json({ error: 'Invalid request: missing untrustedData' });
+      }
 
-      const buttonIndex = untrustedData.buttonIndex || 0;
+      const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
       if (currentQuestion) {
@@ -105,6 +116,7 @@ export default async function handler(req, res) {
               <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
               <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
               <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+              <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
             </head>
           </html>
         `);
