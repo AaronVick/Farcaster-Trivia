@@ -13,9 +13,11 @@ export default function handler(req) {
 
     let backgroundColor = '#1a1a1a';
     let textColor = '#ffffff';
+    let fontSize = 60;
 
     if (type === 'result') {
       backgroundColor = result === 'correct' ? '#4caf50' : '#f44336';
+      fontSize = 50;  // Smaller font size for results
     }
 
     // Split the text into lines to control line breaks
@@ -31,6 +33,7 @@ export default function handler(req) {
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
+            alignItems: 'center',
             fontFamily: 'Arial, sans-serif',
             fontWeight: 'bold',
             color: textColor,
@@ -38,21 +41,11 @@ export default function handler(req) {
             textAlign: 'center',
           }}
         >
-          <div style={{ fontSize: 60, marginBottom: 20 }}>
-            {lines[0]}
-          </div>
-          {lines[1] && (
-            <div style={{ fontSize: 40, marginBottom: 20 }}>
-              {lines[1]}
+          {lines.map((line, index) => (
+            <div key={index} style={{ fontSize: index === 0 && type === 'result' ? fontSize : fontSize - 20 }}>
+              {line}
             </div>
-          )}
-          <div style={{ fontSize: 50 }}>
-            {lines.slice(2).map((line, index) => (
-              <div key={index} style={{ fontSize: 30 }}>
-                {line}
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       ),
       {
