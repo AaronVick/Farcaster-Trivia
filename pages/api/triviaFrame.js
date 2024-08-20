@@ -53,7 +53,7 @@ function optimizeAnswerText(text) {
 }
 
 async function handleAnswerSelection(buttonIndex, res) {
-  const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex]));
+  const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 1]));
   const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
   const isCorrect = selectedAnswer === correctAnswer;
   const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
@@ -118,15 +118,16 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      if (buttonIndex === 1 && currentQuestion) {
-        // Handle "Next Question" button click
+      if (currentQuestion === null) {
+        // If currentQuestion is null, load the first question or a new one
         return handleNextQuestion(res);
-      } else if (currentQuestion) {
+      } else if (buttonIndex === 1) {
+        // If currentQuestion exists and buttonIndex is 1, assume "Next Question"
+        currentQuestion = null;  // Reset current question to trigger the next
+        return handleNextQuestion(res);
+      } else {
         // Handle answer selection (buttons 2, 3, 4)
         return handleAnswerSelection(buttonIndex, res);
-      } else {
-        // Initial question loading
-        return handleNextQuestion(res);
       }
     } else {
       console.log('Method not allowed:', req.method);
