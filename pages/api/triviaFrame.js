@@ -118,16 +118,12 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      if (currentQuestion === null) {
-        // If currentQuestion is null, load the first question or a new one
-        return handleNextQuestion(res);
-      } else if (buttonIndex === 1) {
-        // If currentQuestion exists and buttonIndex is 1, assume "Next Question"
-        currentQuestion = null;  // Reset current question to trigger the next
-        return handleNextQuestion(res);
-      } else {
-        // Handle answer selection (buttons 2, 3, 4)
+      if (currentQuestion) {
+        // Handle answer selection (buttons 1, 2, 3, 4)
         return handleAnswerSelection(buttonIndex, res);
+      } else {
+        // Initial question loading or "Next Question" button clicked
+        return handleNextQuestion(res);
       }
     } else {
       console.log('Method not allowed:', req.method);
