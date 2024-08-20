@@ -34,8 +34,9 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     }
 
     const resultText = isCorrect ? "Correct!" : `Incorrect!\n\nThe correct answer was: ${correctAnswer}`;
-    const tallyText = `\n\nCorrect: ${gameTally.correct}\nIncorrect: ${gameTally.incorrect}`;
-    const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(resultText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
+    const tallyText = `Correct: ${gameTally.correct}\nIncorrect: ${gameTally.incorrect}`;
+    const fullText = `${resultText}\n\n${tallyText}`;
+    const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(fullText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
 
     const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
     const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
@@ -53,9 +54,6 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
           <meta property="fc:frame:button:2:action" content="link" />
           <meta property="fc:frame:button:2:target" content="${shareLink}" />
         </head>
-        <body>
-          <div style="font-size: smaller;">${tallyText}</div>
-        </body>
       </html>
     `);
   } catch (error) {
