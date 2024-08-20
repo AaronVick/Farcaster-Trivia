@@ -52,6 +52,32 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
+async function handleNextQuestion(res) {
+  // Reset the current question to null and fetch a new question
+  currentQuestion = null;
+  currentQuestion = await getValidQuestion();
+  const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
+  const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
+  const ogImageUrl = generateOgImageUrl(decodedQuestion);
+
+  // Respond with the new question and answers
+  res.setHeader('Content-Type', 'text/html');
+  return res.status(200).send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta property="fc:frame" content="vNext" />
+        <meta property="fc:frame:image" content="${ogImageUrl}" />
+        <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
+        <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
+        <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
+        <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
+       <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=Take a break and play some trivia!%0A%0AFrame by @aaronv https://farcaster-trivia-one.vercel.app/" />
+      </head>
+    </html>
+  `);
+}
+
 async function handleAnswerSelection(buttonIndex, res) {
   const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex]));
   const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
@@ -59,9 +85,8 @@ async function handleAnswerSelection(buttonIndex, res) {
   const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
   const ogImageUrl = generateOgImageUrl(resultText, false, isCorrect);
 
-  const shareText = encodeURIComponent("Just played Farcaster Trivia and it's awesome! Give it a try.");
-  const shareUrl = encodeURIComponent("https://farcaster-trivia-one.vercel.app/");
-  const shareLink = `https://warpcast.com/~/compose?text=${shareText}&embeds[]=${shareUrl}`;
+  const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
+  const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
 
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
@@ -74,7 +99,7 @@ async function handleAnswerSelection(buttonIndex, res) {
         <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
         <meta property="fc:frame:button:2" content="Share Game" />
         <meta property="fc:frame:button:2:action" content="link" />
-        <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=Take a break and play some trivia!%0A%0AFrame by @aaronv https://farcaster-trivia-one.vercel.app/" />
+        <meta property="fc:frame:button:2:target" content="${shareLink}" />
       </head>
     </html>
   `);
@@ -96,30 +121,11 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      if (currentQuestion) {
-        return handleAnswerSelection(buttonIndex, res);
+      // Check if the "Next Question" button was clicked
+      if (buttonIndex === 1) {  // Assuming the "Next Question" button is identified with index 1
+        return handleNextQuestion(res);
       } else {
-        // Load a new question if none exists
-        currentQuestion = await getValidQuestion();
-        const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
-        const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
-        const ogImageUrl = generateOgImageUrl(decodedQuestion);
-
-        res.setHeader('Content-Type', 'text/html');
-        return res.status(200).send(`
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta property="fc:frame" content="vNext" />
-              <meta property="fc:frame:image" content="${ogImageUrl}" />
-              <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
-              <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
-              <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
-              <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-              <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
-            </head>
-          </html>
-        `);
+        return handleAnswerSelection(buttonIndex, res);
       }
     } else {
       console.log('Method not allowed:', req.method);
