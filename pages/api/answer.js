@@ -67,7 +67,7 @@ export default async function handler(req, res) {
       }
 
       const buttonIndex = untrustedData.buttonIndex;
-      const currentQuestion = untrustedData.currentQuestion;  // Retrieve the current question
+      const currentQuestion = untrustedData.currentQuestion ? JSON.parse(untrustedData.currentQuestion) : null;  // Retrieve the current question
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
