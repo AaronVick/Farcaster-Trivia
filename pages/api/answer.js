@@ -40,7 +40,12 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
     
     const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(fullText)}&result=${isCorrect ? 'correct' : 'incorrect'}`;
 
-    const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
+    const shareText = encodeURIComponent(
+      "Take a break and play some trivia!\n\n" +
+      "I got " + process.env.GameWins + " out of " + process.env.gameTally + " correct.\n\n" +
+      "Frame by @aaronv\n\n" +
+      "https://farcaster-trivia-one.vercel.app/"
+    );
     const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
 
     res.setHeader('Content-Type', 'text/html');
