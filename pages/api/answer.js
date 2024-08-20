@@ -23,7 +23,13 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion) {
       return res.status(500).json({ error: "Current question is not available." });
     }
 
-    const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 1]));
+    let selectedAnswer;
+    if (buttonIndex === 1) {
+      selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
+    } else {
+      selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 2]));
+    }
+
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
     const resultText = isCorrect ? "Correct!" : `Incorrect! The correct answer was: ${correctAnswer}`;
