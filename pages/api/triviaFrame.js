@@ -48,6 +48,7 @@ async function handleNextQuestion(res) {
   currentQuestion = await getValidQuestion();
   const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
+  const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(decodedQuestion)}`;
 
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
@@ -55,7 +56,7 @@ async function handleNextQuestion(res) {
     <html>
       <head>
         <meta property="fc:frame" content="vNext" />
-        <meta property="fc:frame:image" content="${decodedQuestion}" />
+        <meta property="fc:frame:image" content="${ogImageUrl}" />
         <meta property="fc:frame:button:1" content="${optimizeAnswerText(decodeHtmlEntities(answers[0]))}" />
         <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
         <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />

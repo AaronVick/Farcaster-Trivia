@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
-let currentQuestion = null; // Fetch the current question in this module as well
 
 function decodeHtmlEntities(text) {
   return text.replace(/&amp;/g, '&')
