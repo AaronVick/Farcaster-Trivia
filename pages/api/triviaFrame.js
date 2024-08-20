@@ -2,7 +2,6 @@ import axios from 'axios';
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
 let questionCache = [];
-let currentQuestion = null;
 
 async function fetchTriviaQuestions() {
   if (questionCache.length > 0) {
@@ -44,8 +43,7 @@ function optimizeAnswerText(text) {
 }
 
 async function handleNextQuestion(res) {
-  // Fetch the next question
-  currentQuestion = await getValidQuestion();
+  const currentQuestion = await getValidQuestion();
   const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
   const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(decodedQuestion)}`;
@@ -62,6 +60,7 @@ async function handleNextQuestion(res) {
         <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
         <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
         <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/answer" />
+        <meta property="fc:frame:button:untrustedData" content='${JSON.stringify({ currentQuestion })}' />
       </head>
     </html>
   `);
@@ -80,7 +79,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Invalid request: missing untrustedData' });
       }
 
-      // Ensure the question is correctly handled here
       return handleNextQuestion(res);
     } else {
       console.log('Method not allowed:', req.method);

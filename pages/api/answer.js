@@ -14,8 +14,13 @@ function optimizeAnswerText(text) {
   return text.trim().toLowerCase().replace(/^(the|a|an) /, '');
 }
 
-async function handleAnswerSelection(buttonIndex, res) {
+async function handleAnswerSelection(buttonIndex, res, currentQuestion) {
   try {
+    if (!currentQuestion) {
+      console.error("Current question is not set.");
+      return res.status(500).json({ error: "Current question is not available." });
+    }
+
     const selectedAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.incorrect_answers[buttonIndex - 1]));
     const correctAnswer = optimizeAnswerText(decodeHtmlEntities(currentQuestion.correct_answer));
     const isCorrect = selectedAnswer === correctAnswer;
@@ -60,10 +65,11 @@ export default async function handler(req, res) {
       }
 
       const buttonIndex = untrustedData.buttonIndex;
+      const currentQuestion = untrustedData.currentQuestion;  // Retrieve the current question
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
-      return handleAnswerSelection(buttonIndex, res);
+      return handleAnswerSelection(buttonIndex, res, currentQuestion);
     } else {
       console.log('Method not allowed:', req.method);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
