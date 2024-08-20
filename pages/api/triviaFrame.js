@@ -80,7 +80,8 @@ async function handleAnswerSelection(buttonIndex, res) {
 }
 
 async function handleNextQuestion(res) {
-  currentQuestion = await getValidQuestion();  // Fetch the next question
+  // Fetch the next question
+  currentQuestion = await getValidQuestion();
   const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
   const ogImageUrl = generateOgImageUrl(decodedQuestion);
@@ -118,11 +119,15 @@ export default async function handler(req, res) {
       const buttonIndex = untrustedData.buttonIndex;
       console.log('Button index:', buttonIndex);
 
-      if (currentQuestion) {
+      if (currentQuestion && buttonIndex === 1) {
+        // If currentQuestion exists and buttonIndex is 1, assume "Next Question"
+        currentQuestion = null;  // Reset current question to prepare for the next one
+        return handleNextQuestion(res);
+      } else if (currentQuestion) {
         // Handle answer selection (buttons 1, 2, 3, 4)
         return handleAnswerSelection(buttonIndex, res);
       } else {
-        // Initial question loading or "Next Question" button clicked
+        // Initial question loading or if currentQuestion is null
         return handleNextQuestion(res);
       }
     } else {
