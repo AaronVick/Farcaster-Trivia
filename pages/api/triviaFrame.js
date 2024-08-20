@@ -53,8 +53,7 @@ function optimizeAnswerText(text) {
 }
 
 async function handleNextQuestion(res) {
-  // Reset the current question to null and fetch a new question
-  currentQuestion = null;
+  // Fetch a new question and display it
   currentQuestion = await getValidQuestion();
   const answers = [currentQuestion.correct_answer, ...currentQuestion.incorrect_answers].sort(() => Math.random() - 0.5);
   const decodedQuestion = decodeHtmlEntities(currentQuestion.question);
@@ -88,6 +87,7 @@ async function handleAnswerSelection(buttonIndex, res) {
   const shareText = encodeURIComponent("Take a break and play some trivia!\n\nFrame by @aaronv\n\nhttps://farcaster-trivia-one.vercel.app/");
   const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
 
+  // Display the result (correct/incorrect) with the option to move to the next question
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`
     <!DOCTYPE html>
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       console.log('Button index:', buttonIndex);
 
       // Check if the "Next Question" button was clicked
-      if (buttonIndex === 1) {  // Assuming the "Next Question" button is identified with index 1
+      if (buttonIndex === 1 && currentQuestion === null) {  // Assuming the "Next Question" button is identified with index 1
         return handleNextQuestion(res);
       } else {
         return handleAnswerSelection(buttonIndex, res);
