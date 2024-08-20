@@ -72,7 +72,7 @@ async function handleNextQuestion(res) {
         <meta property="fc:frame:button:2" content="${optimizeAnswerText(decodeHtmlEntities(answers[1]))}" />
         <meta property="fc:frame:button:3" content="${optimizeAnswerText(decodeHtmlEntities(answers[2]))}" />
         <meta property="fc:frame:button:4" content="${optimizeAnswerText(decodeHtmlEntities(answers[3]))}" />
-       <meta property="fc:frame:button:2:target" content="https://warpcast.com/~/compose?text=Take a break and play some trivia!%0A%0AFrame by @aaronv https://farcaster-trivia-one.vercel.app/" />
+        <meta property="fc:frame:post_url" content="https://farcaster-trivia-one.vercel.app/api/triviaFrame" />
       </head>
     </html>
   `);
