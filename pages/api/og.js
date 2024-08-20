@@ -14,9 +14,12 @@ export default function handler(req) {
     let backgroundColor = '#1a1a1a';
     let textColor = '#ffffff';
     let fontSize = 60;
+    let isResult = false;
 
-    if (type === 'result') {
-      backgroundColor = result === 'correct' ? '#4caf50' : '#f44336';
+    // Check if the text starts with "Correct" or "Incorrect"
+    if (text.startsWith("Correct") || text.startsWith("Incorrect")) {
+      isResult = true;
+      backgroundColor = text.startsWith("Correct") ? '#4caf50' : '#f44336';
       fontSize = 50;  // Smaller font size for results
     }
 
@@ -42,7 +45,13 @@ export default function handler(req) {
           }}
         >
           {lines.map((line, index) => (
-            <div key={index} style={{ fontSize: index === 0 && type === 'result' ? fontSize : fontSize - 20 }}>
+            <div
+              key={index}
+              style={{
+                fontSize: isResult && index > 0 ? fontSize - 20 : fontSize,
+                marginBottom: isResult && index > 0 ? '10px' : '20px',
+              }}
+            >
               {line}
             </div>
           ))}
