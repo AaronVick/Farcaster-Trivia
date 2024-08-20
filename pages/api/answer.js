@@ -44,7 +44,7 @@ async function handleAnswerSelection(buttonIndex, res, currentQuestion, buttonMa
       "Take a break and play some trivia!\n\n" +
       "I got " + process.env.GameWins + " out of " + process.env.gameTally + " correct.\n\n" +
       "Frame by @aaronv\n\n" +
-      "https://farcaster-trivia-one.vercel.app".trim()
+      "&embeds[]=https%3A%2F%2Ffarcaster-trivia-one.vercel.app%2F"
     );
     const shareLink = `https://warpcast.com/~/compose?text=${shareText}`;
 
