@@ -77,17 +77,12 @@ export default async function handler(req, res) {
   console.log('Received request to triviaFrame handler');
   console.log('Request method:', req.method);
 
-  if (req.method === 'POST') { // Ensure the method is POST
-    try {
-      console.log('Processing POST request...');
-      const { untrustedData } = req.body;
+  try {
+    // Accept both POST and GET requests for button clicks
+    if (req.method === 'POST' || req.method === 'GET') { 
+      const untrustedData = req.body?.untrustedData || { buttonIndex: 0 }; // Handle the case where GET request doesn't include a body
 
-      if (!untrustedData) {
-        console.error('No untrustedData in request body');
-        return res.status(400).json({ error: 'Invalid request: missing untrustedData' });
-      }
-
-      const buttonIndex = untrustedData.buttonIndex;
+      const buttonIndex = untrustedData.buttonIndex || 0;
       console.log('Button index:', buttonIndex);
 
       if (currentQuestion) {
@@ -114,13 +109,12 @@ export default async function handler(req, res) {
           </html>
         `);
       }
-    } catch (error) {
-      console.error('Error processing POST request:', error);
-      return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
+    } else {
+      console.log('Method not allowed:', req.method);
+      return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
     }
-  } else {
-    // If any other method is used, respond with a 405 error
-    console.log('Method not allowed:', req.method);
-    return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
+  } catch (error) {
+    console.error('Error processing request:', error);
+    return res.status(500).json({ error: 'Internal Server Error: ' + error.message });
   }
 }
