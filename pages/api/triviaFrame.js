@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { setAnswerValue } from 'vercel-env-variable-helper'; // A helper function to set the environment variable
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
 let questionCache = [];
@@ -50,8 +49,8 @@ async function handleNextQuestion(res) {
   const ogImageUrl = `${VERCEL_OG_API}?text=${encodeURIComponent(decodedQuestion)}`;
 
   // Set the environment variable with the current question data
-  setAnswerValue(JSON.stringify(currentQuestion));
-  console.log("Setting currentQuestion in answer_Value:", JSON.stringify(currentQuestion)); // Debugging: Log currentQuestion
+  process.env.answer_Value = JSON.stringify(currentQuestion);
+  console.log("Setting currentQuestion in answer_Value:", process.env.answer_Value); // Debugging: Log currentQuestion
 
   res.setHeader('Content-Type', 'text/html');
   return res.status(200).send(`

@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { getAnswerValue, setAnswerValue } from 'vercel-env-variable-helper'; // Helper functions to get and set the environment variable
 
 const VERCEL_OG_API = `${process.env.NEXT_PUBLIC_BASE_URL}/api/og`;
 
@@ -68,14 +67,14 @@ export default async function handler(req, res) {
       }
 
       const buttonIndex = untrustedData.buttonIndex;
-      const currentQuestion = getAnswerValue();  // Retrieve the current question from the environment variable
+      const currentQuestion = JSON.parse(process.env.answer_Value || null);  // Retrieve the current question from the environment variable
       console.log('Button index:', buttonIndex);
 
       // Handle answer selection (buttons 1, 2, 3, 4)
       const response = await handleAnswerSelection(buttonIndex, res, currentQuestion);
 
       if (buttonIndex === 1) {
-        setAnswerValue(null); // Reset the environment variable if "Next Question" is clicked
+        process.env.answer_Value = null; // Reset the environment variable if "Next Question" is clicked
       }
 
       return response;
